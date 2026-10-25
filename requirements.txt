@@ -1,0 +1,6 @@
+﻿# Runtime and data science dependencies
+streamlit
+pandas
+scikit-learn
+matplotlib
+tabulate

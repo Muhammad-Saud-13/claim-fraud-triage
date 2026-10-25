@@ -1,0 +1,51 @@
+{
+  "target_column": "FraudFound",
+  "target_values": ["No", "Yes"],
+  "split_only_columns": ["Year"],
+  "identifier_columns": ["PolicyNumber", "RepNumber"],
+  "post_investigation_columns": [],
+  "excluded_from_model_features": [
+    "FraudFound",
+    "PolicyNumber",
+    "RepNumber",
+    "Year"
+  ],
+  "feature_columns": [
+    "Month",
+    "WeekOfMonth",
+    "DayOfWeek",
+    "Make",
+    "AccidentArea",
+    "DayOfWeekClaimed",
+    "MonthClaimed",
+    "WeekOfMonthClaimed",
+    "Sex",
+    "MaritalStatus",
+    "Age",
+    "Fault",
+    "VehicleCategory",
+    "VehiclePrice",
+    "Deductible",
+    "DriverRating",
+    "Days:Policy-Accident",
+    "Days:Policy-Claim",
+    "PastNumberOfClaims",
+    "AgeOfVehicle",
+    "AgeOfPolicyHolder",
+    "PoliceReportFiled",
+    "WitnessPresent",
+    "AgentType",
+    "NumberOfSuppliments",
+    "AddressChange-Claim",
+    "NumberOfCars",
+    "BasePolicy"
+  ],
+  "policy_notes": {
+    "FraudFound": "Historical investigation outcome; never use as an input.",
+    "PolicyNumber": "Identifier for display and audit only; never use as evidence.",
+    "RepNumber": "Identifier-like representative code; excluded unless later provenance proves legitimate and fair claim-time use.",
+    "Year": "Used only to create the chronological split: 1994-1995 training and 1996 test.",
+    "PolicyType": "Redundant for modelling because its mismatch with VehicleCategory is one systematic source-defined combination; retained for audit and display.",
+    "NumberOfSuppliments": "Timing must be confirmed; if supplements are added after first triage, exclude the field before production training."
+  }
+}

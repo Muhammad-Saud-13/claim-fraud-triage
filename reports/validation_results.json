@@ -1,0 +1,176 @@
+{
+  "raw": {
+    "checks": [
+      {
+        "name": "age_clean_column_exists",
+        "passed": false,
+        "message": "Age_clean stores age with the zero sentinel made missing."
+      },
+      {
+        "name": "age_zero_sentinel_is_removed",
+        "passed": false,
+        "message": "No effective age value is zero."
+      },
+      {
+        "name": "age_repair_flag_exists",
+        "passed": false,
+        "message": "Age_was_repaired records the 320 age sentinel rows."
+      },
+      {
+        "name": "age_repair_flag_has_320_true_values",
+        "passed": false,
+        "message": "Exactly 320 Age rows are marked as repaired."
+      },
+      {
+        "name": "claimed_day_clean_column_exists",
+        "passed": false,
+        "message": "DayOfWeekClaimed_clean stores the repaired weekday field."
+      },
+      {
+        "name": "claimed_day_zero_sentinel_is_removed",
+        "passed": false,
+        "message": "The effective claimed weekday has no zero sentinel."
+      },
+      {
+        "name": "claimed_day_repair_flag_has_one_true_value",
+        "passed": false,
+        "message": "Exactly one claimed-weekday sentinel is marked as repaired."
+      },
+      {
+        "name": "claimed_month_clean_column_exists",
+        "passed": false,
+        "message": "MonthClaimed_clean stores the repaired month field."
+      },
+      {
+        "name": "claimed_month_zero_sentinel_is_removed",
+        "passed": false,
+        "message": "The effective claimed month has no zero sentinel."
+      },
+      {
+        "name": "claimed_month_repair_flag_has_one_true_value",
+        "passed": false,
+        "message": "Exactly one claimed-month sentinel is marked as repaired."
+      },
+      {
+        "name": "make_clean_column_exists",
+        "passed": false,
+        "message": "Make_clean stores the fixed-map spelling repairs."
+      },
+      {
+        "name": "make_repair_flag_has_39_true_values",
+        "passed": false,
+        "message": "Exactly 39 fixed-map Make repairs are marked."
+      },
+      {
+        "name": "policy_vehicle_mismatch_flag_exists",
+        "passed": false,
+        "message": "PolicyType/VehicleCategory disagreements are flagged, not overwritten."
+      },
+      {
+        "name": "policy_vehicle_mismatch_flag_has_4987_true_values",
+        "passed": false,
+        "message": "Exactly 4,987 cross-column disagreements are flagged."
+      },
+      {
+        "name": "repair_output_has_15420_rows",
+        "passed": false,
+        "message": "The repaired output keeps all 15,420 records."
+      },
+      {
+        "name": "repair_output_has_original_target",
+        "passed": false,
+        "message": "The target remains present but is not used to choose repairs."
+      }
+    ],
+    "passed": false,
+    "passed_count": 0,
+    "failed_count": 16
+  },
+  "cleaned": {
+    "checks": [
+      {
+        "name": "age_clean_column_exists",
+        "passed": true,
+        "message": "Age_clean stores age with the zero sentinel made missing."
+      },
+      {
+        "name": "age_zero_sentinel_is_removed",
+        "passed": true,
+        "message": "No effective age value is zero."
+      },
+      {
+        "name": "age_repair_flag_exists",
+        "passed": true,
+        "message": "Age_was_repaired records the 320 age sentinel rows."
+      },
+      {
+        "name": "age_repair_flag_has_320_true_values",
+        "passed": true,
+        "message": "Exactly 320 Age rows are marked as repaired."
+      },
+      {
+        "name": "claimed_day_clean_column_exists",
+        "passed": true,
+        "message": "DayOfWeekClaimed_clean stores the repaired weekday field."
+      },
+      {
+        "name": "claimed_day_zero_sentinel_is_removed",
+        "passed": true,
+        "message": "The effective claimed weekday has no zero sentinel."
+      },
+      {
+        "name": "claimed_day_repair_flag_has_one_true_value",
+        "passed": true,
+        "message": "Exactly one claimed-weekday sentinel is marked as repaired."
+      },
+      {
+        "name": "claimed_month_clean_column_exists",
+        "passed": true,
+        "message": "MonthClaimed_clean stores the repaired month field."
+      },
+      {
+        "name": "claimed_month_zero_sentinel_is_removed",
+        "passed": true,
+        "message": "The effective claimed month has no zero sentinel."
+      },
+      {
+        "name": "claimed_month_repair_flag_has_one_true_value",
+        "passed": true,
+        "message": "Exactly one claimed-month sentinel is marked as repaired."
+      },
+      {
+        "name": "make_clean_column_exists",
+        "passed": true,
+        "message": "Make_clean stores the fixed-map spelling repairs."
+      },
+      {
+        "name": "make_repair_flag_has_39_true_values",
+        "passed": true,
+        "message": "Exactly 39 fixed-map Make repairs are marked."
+      },
+      {
+        "name": "policy_vehicle_mismatch_flag_exists",
+        "passed": true,
+        "message": "PolicyType/VehicleCategory disagreements are flagged, not overwritten."
+      },
+      {
+        "name": "policy_vehicle_mismatch_flag_has_4987_true_values",
+        "passed": true,
+        "message": "Exactly 4,987 cross-column disagreements are flagged."
+      },
+      {
+        "name": "repair_output_has_15420_rows",
+        "passed": true,
+        "message": "The repaired output keeps all 15,420 records."
+      },
+      {
+        "name": "repair_output_has_original_target",
+        "passed": true,
+        "message": "The target remains present but is not used to choose repairs."
+      }
+    ],
+    "passed": true,
+    "passed_count": 16,
+    "failed_count": 0
+  }
+}

@@ -1,0 +1,6 @@
+﻿"column","observed_label","count","likely_standard_label","similarity_note"
+"Make","Accura","472","Acura","one extra r; source spelling should be confirmed"
+"Make","Mecedes","4","Mercedes","missing r; source spelling should be confirmed"
+"Make","Nisson","30","Nissan","o versus a; source spelling should be confirmed"
+"Make","Porche","5","Porsche","missing s; source spelling should be confirmed"
+"Make","VW","283","Volkswagen","abbreviation, not automatically an error"

@@ -1,0 +1,25 @@
+{
+  "banner_text": "Student project — not for financial or legal use.",
+  "short_warning": "This is decision support, not proof of fraud and not an automatic claim decision.",
+  "full_warning": "A false fraud flag can delay or wrongly investigate a genuine claimant. A missed fraud case can increase losses and make honest customers bear costs. A claims adjuster must review the evidence and record the final decision.",
+  "required_mitigations": [
+    "Human adjuster makes the final decision.",
+    "Every prediction includes a plain-language reason.",
+    "The case file shows up to five comparable past claims.",
+    "The missed-fraud and unnecessary-investigation costs are editable.",
+    "Pay, review, and investigate use two editable probability thresholds.",
+    "Predicted probability is shown as confidence, not proof.",
+    "The model recommendation and adjuster decision are stored separately in the audit trail.",
+    "Only the supplied public/anonymised dataset is used in the demonstration.",
+    "No automatic claim denial or automatic fraud finding is allowed."
+  ],
+  "initial_costs": {
+    "missed_fraud": 100000,
+    "unnecessary_investigation": 5000
+  },
+  "initial_thresholds": {
+    "pay_below": 0.2,
+    "investigate_at_or_above": 0.6
+  },
+  "comparable_claim_limit": 5
+}
