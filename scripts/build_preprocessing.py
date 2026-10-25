@@ -21,10 +21,10 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 CLEAN_PATH = PROJECT_ROOT / "data" / "cleaned_claims.csv"
 MODEL_TABLE_PATH = PROJECT_ROOT / "data" / "modeling_claims.csv"
 LABELS_TABLE_PATH = PROJECT_ROOT / "data" / "modeling_labels.csv"
-SPLIT_JSON_PATH = PROJECT_ROOT / "reports" / "modelling_split.json"
-SPLIT_MD_PATH = PROJECT_ROOT / "reports" / "modelling_split.md"
-COMPARISON_CSV_PATH = PROJECT_ROOT / "reports" / "preprocessing_comparison.csv"
-COMPARISON_MD_PATH = PROJECT_ROOT / "reports" / "preprocessing_comparison.md"
+SPLIT_JSON_PATH = PROJECT_ROOT / "reports" / "modeling" / "modelling_split.json"
+SPLIT_MD_PATH = PROJECT_ROOT / "reports" / "modeling" / "modelling_split.md"
+COMPARISON_CSV_PATH = PROJECT_ROOT / "reports" / "modeling" / "preprocessing_comparison.csv"
+COMPARISON_MD_PATH = PROJECT_ROOT / "reports" / "modeling" / "preprocessing_comparison.md"
 ARTIFACT_PATH = PROJECT_ROOT / "models" / "preprocessing_artifacts.pkl"
 
 FEATURE_COLUMNS = [
@@ -138,7 +138,7 @@ def main() -> None:
         "cannot accidentally be supplied as model inputs. The matching "
         "`data/modeling_labels.csv` file stores the target and split metadata separately for "
         "training, evaluation, and case identification. The model receives the 28 columns "
-        "listed in `src/feature_policy.json`. Safe repaired "
+        "listed in `config/feature_policy.json`. Safe repaired "
         "values replace `Age`, `DayOfWeekClaimed`, and `MonthClaimed`. Unknown age values "
         "remain missing until the training-only median imputer runs inside each pipeline.",
     ]

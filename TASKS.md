@@ -27,44 +27,44 @@ This is the implementation task list for the project. The implementation agent m
 
 ### 2. Create the complete data dictionary (Stage A)
 
-- **Status:** COMPLETE — `reports/data_dictionary.md` documents all 33 columns using the observed schema and values.
+- **Status:** COMPLETE — `reports/data_quality/data_dictionary.md` documents all 33 columns using the observed schema and values.
 - **Goal:** Document every real column and its role at the time of triage.
 - **Exact steps:** For all 33 columns, record measurement type (nominal, ordinal, interval, or ratio where justified), allowed values or plausible range, missing/special values, and role. Specifically assess `PolicyNumber` as identifier; treat `FraudFound` as target; assess `Year`, `Month`, `DayOfWeek`, `MonthClaimed`, `WeekOfMonthClaimed`, `Fault`, `PoliceReportFiled`, `WitnessPresent`, and all other fields for whether they are explanatory and available at first triage. Do not silently treat `0` as a normal category.
 - **Input:** `carclaims.csv` and dataset facts above.
-- **Output file:** `reports/data_dictionary.md`.
+- **Output file:** `reports/data_quality/data_dictionary.md`.
 - **How to check:** It has 33 entries, uses exact names, states a role for each, and has no unexplained field.
 - **Marks affected:** A–B / 15.
 - **Owner:** data.
 
 ### 3. Establish field-timing and leakage provenance (Project 15 challenge)
 
-- **Status:** COMPLETE — `reports/leakage_provenance.md`, `reports/single_column_predictive_check.csv`, and `src/feature_policy.json` were produced and verified against all 33 columns.
+- **Status:** COMPLETE — `reports/data_quality/leakage_provenance.md`, `reports/data_quality/single_column_predictive_check.csv`, and `config/feature_policy.json` were produced and verified against all 33 columns.
 - **Goal:** Identify what is known before investigation and prove what must not be used.
 - **Exact steps:** Trace the dataset documentation/source if available. Inspect every real column for whether it is known when the adjuster first asks for triage. Mark `FraudFound` (outcome), `PolicyNumber` (identifier), `Year` (split-only calendar field), and `RepNumber` (identifier-like code unless provenance proves otherwise) as must-not-use. Do not invent a post-investigation field. Run the single-column majority-value predictive check using 1994–1995 as training and 1996 as test for every non-target column. Report accuracy, majority baseline, precision, recall, and unseen test values.
 - **Input:** source metadata, `carclaims.csv`, data dictionary, `DECISIONS.md`.
-- **Output file:** `reports/leakage_provenance.md`, `reports/single_column_predictive_check.csv`, and the implemented feature-exclusion configuration used by training and prediction.
+- **Output file:** `reports/data_quality/leakage_provenance.md`, `reports/data_quality/single_column_predictive_check.csv`, and the implemented feature-exclusion configuration used by training and prediction.
 - **How to check:** The report has a field-by-field timing table, a final excluded-feature list, the single-column results for every column, and an honest statement if no separate leak is identified.
 - **Marks affected:** Stage A (15), assigned challenge (10), evaluation honesty (20).
 - **Owner:** data.
 
 ### 4. Write the harm and mitigation statement
 
-- **Status:** COMPLETE — `reports/ethics_harm_statement.md` and `src/ethics_content.json` contain the harm statement, visible warning, and all required interface mitigations.
+- **Status:** COMPLETE — `reports/data_quality/ethics_harm_statement.md` and `config/ethics_content.json` contain the harm statement, visible warning, and all required interface mitigations.
 - **Goal:** Meet the Project 15 ethics requirement before building a user interface.
 - **Exact steps:** State that a false fraud flag can delay or wrongly investigate a genuine claimant, while missed fraud can increase losses and shift costs to honest customers. State that the system is student decision support, not an automatic denial or legal/financial decision. Specify mitigations: human adjuster decision, visible reasons and comparable cases, adjustable cost-based threshold, uncertainty/confidence, audit trail, no identifiable real-person demo records, and a warning on screen.
 - **Input:** Project 15 ethics requirement and intended workflow.
-- **Output file:** `reports/ethics_harm_statement.md` and the visible warning/mitigation text used by the application.
+- **Output file:** `reports/data_quality/ethics_harm_statement.md` and the visible warning/mitigation text used by the application.
 - **How to check:** Both harm directions and each interface mitigation are present; the exact warning “student project, not for financial or legal use” is included for reuse in the app.
 - **Marks affected:** Ethics requirement, Stage G / 20, demo/viva / 10.
 - **Owner:** app (data reviews).
 
 ### 5. Run the raw-data quality audit with six fault categories (Stage B)
 
-- **Status:** COMPLETE — re-audited with the requested Lecture 2 vocabulary; `reports/raw_profile.csv`, `reports/raw_quality_audit_lecture2.csv`, `reports/raw_quality_audit_lecture2.md`, `reports/label_similarity_variants.csv`, and `src/audit_raw_data.ps1` contain the executed profile and audit evidence.
+- **Status:** COMPLETE — re-audited with the requested Lecture 2 vocabulary; `reports/data_quality/raw_profile.csv`, `reports/data_quality/raw_quality_audit_lecture2.csv`, `reports/data_quality/raw_quality_audit_lecture2.md`, `reports/data_quality/label_similarity_variants.csv`, and `scripts/audit_raw_data.ps1` contain the executed profile and audit evidence.
 - **Goal:** Find at least six genuine faults using Lecture 2 vocabulary.
 - **Exact steps:** Define detection expressions and counts for at least six distinct categories, such as missing values, special/unknown `0` values, invalid ranges (for example impossible `Age`), inconsistent category spelling/casing, inconsistent category combinations, duplicate records or duplicate identifiers, and outliers/impossible values. Do not claim a category without evidence. Include checks for all exact columns, including colon/hyphen names.
 - **Input:** raw `carclaims.csv`, data dictionary.
-- **Output file:** `reports/raw_quality_audit_lecture2.md` and `reports/raw_quality_audit_lecture2.csv`.
+- **Output file:** `reports/data_quality/raw_quality_audit_lecture2.md` and `reports/data_quality/raw_quality_audit_lecture2.csv`.
 - **How to check:** At least six categories each have an expression, affected-record count, example values, and a decision to repair, retain, or document.
 - **Marks affected:** Stage A–B / 15.
 - **Owner:** data.
@@ -75,29 +75,29 @@ This is the implementation task list for the project. The implementation agent m
 - **Goal:** Make cleaning traceable and defensible.
 - **Exact steps:** For each approved repair, define the rule, replacement method, and why it is safe. Add one provenance indicator per repaired field (for example `<field>_was_repaired`), preserve the raw source, and avoid target-based imputation. Define how duplicate records/IDs and special values are handled. Produce a numeric before/after table with rows changed, missing/special values, invalid values, duplicates, and final rows/columns.
 - **Input:** quality-audit findings.
-- **Output file:** `data/cleaned_claims.csv`, with provenance columns, and `reports/repair_results.csv` plus `reports/repair_results.md`.
+- **Output file:** `data/cleaned_claims.csv`, with provenance columns, and `reports/data_quality/repair_results.csv` plus `reports/data_quality/repair_results.md`.
 - **How to check:** Every repair has a before count, after count, rule, provenance field, and reproducible test.
 - **Marks affected:** Stage A–B / 15.
 - **Owner:** data.
 
 ### 7. Implement `validate()` and raw-versus-clean evidence (Stage B)
 
-- **Status:** COMPLETE — `src/validate_data.py` ran 16 repair-focused assertions on both files; raw data failed all 16 and cleaned data passed all 16. Results are saved in `reports/validation_results.json` and `reports/validation_results.md`.
+- **Status:** COMPLETE — `scripts/validate_data.py` ran 16 repair-focused assertions on both files; raw data failed all 16 and cleaned data passed all 16. Results are saved in `reports/data_quality/validation_results.json` and `reports/data_quality/validation_results.md`.
 - **Goal:** Prove data quality rather than only describing it.
 - **Exact steps:** Implement at least ten repair-focused assertions tied directly to the audited faults: sentinel removal, explicit missing treatment, spelling-variant flags, cross-column mismatch flags, provenance counts, preserved row count, and retained target column. Run the same validator against raw data and cleaned data. Every assertion must fail on raw data and pass on cleaned data.
 - **Input:** raw data and completed repair results.
-- **Output file:** Implemented `validate()` function, `reports/validation_results.json`, and `reports/validation_results.md`.
+- **Output file:** Implemented `validate()` function, `reports/data_quality/validation_results.json`, and `reports/data_quality/validation_results.md`.
 - **How to check:** There are 10+ named repair assertions; the raw run has 0 passes and the cleaned run has 0 failures.
 - **Marks affected:** Stage A–B / 15.
 - **Owner:** data.
 
 ### 8. Build the honest modelling table and freeze the evaluation split (Stages C/E)
 
-- **Status:** COMPLETE — `src/build_preprocessing.py` created `data/modeling_claims.csv`, froze the 1994–1995 training and 1996 test split, saved split identifiers/metadata, and documented the excluded feature list.
+- **Status:** COMPLETE — `scripts/build_preprocessing.py` created `data/modeling_claims.csv`, froze the 1994–1995 training and 1996 test split, saved split identifiers/metadata, and documented the excluded feature list.
 - **Goal:** Prevent leakage and make the evaluation reflect actual use.
 - **Exact steps:** Define target encoding for `FraudFound`; exclude `FraudFound`, `PolicyNumber`, `Year`, `RepNumber` unless later provenance proves legitimate use, and every post-investigation field. Use the chosen chronological split: 1994 and 1995 for training, 1996 for the untouched test. Freeze the test set before tuning and do not duplicate fraud into the test set.
 - **Input:** cleaned data, leakage report, `DECISIONS.md`.
-- **Output file:** Implemented preprocessing/split module, saved split identifiers or reproducible split metadata, and `reports/modelling_split.md`.
+- **Output file:** Implemented preprocessing/split module, saved split identifiers or reproducible split metadata, and `reports/modeling/modelling_split.md`.
 - **How to check:** The feature list, excluded list, split rule, seed, and untouched-test-set rule are explicit.
 - **Marks affected:** Stage C / 10, Stage E / 20, challenge / 10.
 - **Owner:** models (data supplies timing evidence).
@@ -108,7 +108,7 @@ This is the implementation task list for the project. The implementation agent m
 - **Goal:** Satisfy preprocessing requirements for all model families.
 - **Exact steps:** State rescaling separately for decision tree/rule-based, nearest neighbour, naïve Bayes, and neural network families selected. Define categorical encoding and handling of ordinal fields. Apply discretization/binarization only where a chosen model requires it, with bin boundaries and justification. Compare dimensionality reduction versus feature subset selection on the same model, same training folds, and same test set; pre-specify the comparison metrics and selection procedure.
 - **Input:** data dictionary, completed split decisions, selected decision tree, kNN, and naïve Bayes families.
-- **Output file:** Implemented preprocessing pipelines, saved preprocessing artifacts, `reports/preprocessing_comparison.csv`, and `reports/preprocessing_comparison.md`.
+- **Output file:** Implemented preprocessing pipelines, saved preprocessing artifacts, `reports/modeling/preprocessing_comparison.csv`, and `reports/modeling/preprocessing_comparison.md`.
 - **How to check:** A reviewer can reproduce each preprocessing branch without using test data or the target as an input feature.
 - **Marks affected:** Stage C / 10.
 - **Owner:** models.
@@ -118,7 +118,7 @@ This is the implementation task list for the project. The implementation agent m
 - **Goal:** Build the required comparable model set.
 - **Exact steps:** Train a decision tree, k-nearest neighbours model, and naïve Bayes model on identical prepared training data and compare them on the identical held-out test set. Use grid search on training data only, with 5-fold stratified cross-validation inside the search. Record the searched parameter grid, selection metric, class-imbalance policy, and tie-breaking rule before final test scoring.
 - **Input:** implemented preprocessing pipelines and training split.
-- **Output file:** At least three saved trained model artifacts, the shared training code, `reports/hyperparameter_results.csv`, and `reports/model_comparison.csv`.
+- **Output file:** At least three saved trained model artifacts, the shared training code, `reports/modeling/hyperparameter_results.csv`, and `reports/modeling/model_comparison.csv`.
 - **How to check:** Three different families, fair inputs, tuning procedure, and explainable-model requirement are all documented.
 - **Marks affected:** Stage D / 15.
 - **Owner:** models.

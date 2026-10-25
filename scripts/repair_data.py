@@ -6,10 +6,10 @@ import pandas as pd
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-RAW_PATH = PROJECT_ROOT / "carclaims.csv"
+RAW_PATH = PROJECT_ROOT / "data" / "raw_claims.csv"
 CLEAN_PATH = PROJECT_ROOT / "data" / "cleaned_claims.csv"
-RESULTS_PATH = PROJECT_ROOT / "reports" / "repair_results.csv"
-SUMMARY_PATH = PROJECT_ROOT / "reports" / "repair_results.md"
+RESULTS_PATH = PROJECT_ROOT / "reports" / "data_quality" / "repair_results.csv"
+SUMMARY_PATH = PROJECT_ROOT / "reports" / "data_quality" / "repair_results.md"
 
 
 def repair_data(raw: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -119,7 +119,7 @@ def main() -> None:
         "",
         "### Make values checked",
         "",
-        "The complete Make count is saved in `reports/label_similarity_variants.csv`. "
+        "The complete Make count is saved in `reports/data_quality/label_similarity_variants.csv`. "
         "`Mecedes` (4), `Nisson` (30), and `Porche` (5) use the fixed map. "
         "`Accura` (472) remains unchanged because it may be a source label; `VW` (283) "
         "is an abbreviation rather than a proven error.",

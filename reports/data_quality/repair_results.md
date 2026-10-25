@@ -16,7 +16,7 @@ All 320 rows with `Age = 0` occur in `AgeOfPolicyHolder = 16 to 17`. Therefore `
 
 ### Make values checked
 
-The complete Make count is saved in `reports/label_similarity_variants.csv`. `Mecedes` (4), `Nisson` (30), and `Porche` (5) use the fixed map. `Accura` (472) remains unchanged because it may be a source label; `VW` (283) is an abbreviation rather than a proven error.
+The complete Make count is saved in `reports/data_quality/label_similarity_variants.csv`. `Mecedes` (4), `Nisson` (30), and `Porche` (5) use the fixed map. `Accura` (472) remains unchanged because it may be a source label; `VW` (283) is an abbreviation rather than a proven error.
 
 ### PolicyType x VehicleCategory x BasePolicy conclusion
 

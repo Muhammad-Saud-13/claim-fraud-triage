@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
-$inputPath = Join-Path $root 'carclaims.csv'
-$reports = Join-Path $root 'reports'
+$inputPath = Join-Path $root 'data\raw_claims.csv'
+$reports = Join-Path $root 'reports\data_quality'
 $rows = @(Import-Csv -LiteralPath $inputPath)
 $columns = @($rows[0].PSObject.Properties.Name)
 
@@ -177,9 +177,9 @@ $audit | Export-Csv -LiteralPath (Join-Path $reports 'raw_quality_audit_lecture2
 @(
     'RAW PROFILE AND LECTURE 2 AUDIT',
     '',
-    'Profile table: reports/raw_profile.csv',
-    'Similarity table: reports/label_similarity_variants.csv',
-    'Audit table: reports/raw_quality_audit_lecture2.csv',
+    'Profile table: reports/data_quality/raw_profile.csv',
+    'Similarity table: reports/data_quality/label_similarity_variants.csv',
+    'Audit table: reports/data_quality/raw_quality_audit_lecture2.csv',
     '',
     'Genuine Lecture 2 fault count:',
     '- 3 genuine Lecture 2 fault categories remain: sentinel value, inconsistent encoding, and outlier.',
@@ -210,5 +210,5 @@ $audit | Export-Csv -LiteralPath (Join-Path $reports 'raw_quality_audit_lecture2
     'Quality notes:',
     '- Timeliness: Year ranges from 1994 to 1996; the later model task will use a chronological split.',
     '- Relevance: The file does not contain an obvious claim amount field, so financial loss size cannot be modelled directly.',
-    '- Source data dictionary: no separate source data dictionary was included in the workspace; measurement roles are documented in reports/data_dictionary.md.'
+    '- Source data dictionary: no separate source data dictionary was included in the workspace; measurement roles are documented in reports/data_quality/data_dictionary.md.'
 ) | Set-Content -LiteralPath (Join-Path $reports 'raw_quality_audit_lecture2.md') -Encoding utf8

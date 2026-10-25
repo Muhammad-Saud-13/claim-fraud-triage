@@ -7,10 +7,10 @@ import pandas as pd
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-RAW_PATH = PROJECT_ROOT / "carclaims.csv"
+RAW_PATH = PROJECT_ROOT / "data" / "raw_claims.csv"
 CLEAN_PATH = PROJECT_ROOT / "data" / "cleaned_claims.csv"
-RESULTS_PATH = PROJECT_ROOT / "reports" / "validation_results.json"
-SUMMARY_PATH = PROJECT_ROOT / "reports" / "validation_results.md"
+RESULTS_PATH = PROJECT_ROOT / "reports" / "data_quality" / "validation_results.json"
+SUMMARY_PATH = PROJECT_ROOT / "reports" / "data_quality" / "validation_results.md"
 
 BASE_COLUMNS = [
     "Month", "WeekOfMonth", "DayOfWeek", "Make", "AccidentArea",

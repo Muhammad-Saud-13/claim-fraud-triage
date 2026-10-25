@@ -58,6 +58,6 @@ Results are in [`single_column_predictive_check.csv`](./single_column_predictive
 
 No single column was an obvious predictive leak under the declared chronological single-column check. This does **not** mean that the combined attributes have no predictive signal. It means that the available evidence does not justify naming a separate leaked post-investigation field.
 
-The honest production feature policy is in [`feature_policy.json`](../src/feature_policy.json). It excludes `FraudFound`, `PolicyNumber`, `RepNumber`, and `Year`. It also requires the timing of `NumberOfSuppliments` to be confirmed before final production training. If that field is found to be post-triage, it must be added to the exclusion list and the model must be retrained.
+The honest production feature policy is in [`feature_policy.json`](../../config/feature_policy.json). It excludes `FraudFound`, `PolicyNumber`, `RepNumber`, and `Year`. It also requires the timing of `NumberOfSuppliments` to be confirmed before final production training. If that field is found to be post-triage, it must be added to the exclusion list and the model must be retrained.
 
 The implementation must never use `FraudFound` for cleaning, imputation, feature selection, scaling, resampling, tuning, explanation, or batch scoring.
