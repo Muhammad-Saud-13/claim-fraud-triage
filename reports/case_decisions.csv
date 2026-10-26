@@ -1,0 +1,2 @@
+PolicyNumber,Model,Recommendation,Probability,Decision,Notes,Timestamp
+"1","decision_tree","Review","0.42","Review","Sample audit-row test from the case-file workflow.","2026-10-26T00:00:00Z"

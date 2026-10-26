@@ -1,0 +1,2 @@
+model,comparison,accuracy,majority_baseline,precision,recall,roc_auc,cv_accuracy_mean,cv_accuracy_std,threshold,note
+gaussian_nb,honest_model_excluding_target_and_identifiers,0.4964486896889542,0.9478324761204996,0.08509680324178298,0.8873239436619719,0.6922080285329548,0.8291435510962051,0.012567704914144438,0.95,"No separate post-investigation field was identified, so the honest production model excludes FraudFound, PolicyNumber, RepNumber, and Year."

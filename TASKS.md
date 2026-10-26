@@ -115,6 +115,7 @@ This is the implementation task list for the project. The implementation agent m
 
 ### 10. Train and tune three classifier families fairly (Stage D)
 
+- **Status:** COMPLETE — three model families were trained, tuned by grid search on 1994–1995 training data only, and saved with preprocessing artifacts under `models/`; `reports/modeling/hyperparameter_results.csv` and `reports/modeling/model_comparison.csv` were produced.
 - **Goal:** Build the required comparable model set.
 - **Exact steps:** Train a decision tree, k-nearest neighbours model, and naïve Bayes model on identical prepared training data and compare them on the identical held-out test set. Use grid search on training data only, with 5-fold stratified cross-validation inside the search. Record the searched parameter grid, selection metric, class-imbalance policy, and tie-breaking rule before final test scoring.
 - **Input:** implemented preprocessing pipelines and training split.
@@ -125,6 +126,7 @@ This is the implementation task list for the project. The implementation agent m
 
 ### 11. Run cross-validation and metrics reporting (Stage E)
 
+- **Status:** COMPLETE — training-only 5-fold stratified CV with mean/spread, precision, recall, F1, and accuracy/baseline reporting were generated in `reports/cross_validation_results.csv`, `reports/test_metrics.csv`, and `reports/evaluation_results.md`.
 - **Goal:** Measure performance honestly under extreme imbalance.
 - **Exact steps:** Use 5-fold stratified cross-validation on the training portion only. Report mean and standard deviation. Report recall and precision as the two required metrics beyond accuracy, and justify them for missed fraud and unnecessary investigations. For every accuracy in tables, charts, screens, and README, place the majority-class baseline beside it and identify which subset supplies that baseline.
 - **Input:** completed split decisions and trained-model configuration.
@@ -135,6 +137,7 @@ This is the implementation task list for the project. The implementation agent m
 
 ### 12. Run ROC/AUC and cost-matrix threshold selection (Stages E and Project 15)
 
+- **Status:** COMPLETE — ROC/AUC curves, confusion matrices, cost-grid analysis, and threshold configuration were saved under `reports/` with the selected operating threshold tied to expected cost.
 - **Goal:** Choose an operational threshold based on consequences, not 0.5.
 - **Exact steps:** Start with a missed-fraud cost of 100,000 and unnecessary-investigation cost of 5,000, both editable in Settings. Generate ROC curve and AUC, explaining both simply. Evaluate expected cost over thresholds and choose the operating threshold from the cost matrix rather than 0.5. Use two editable thresholds for Pay (`<0.20`), Review (`0.20` to `<0.60`), and Investigate (`>=0.60`) as the initial three-band defaults, then show the validation cost table and sensitivity table. Record recall, precision, workload, and confusion-matrix consequences.
 - **Input:** validation predictions, completed evaluation outputs, harm statement.
@@ -145,6 +148,7 @@ This is the implementation task list for the project. The implementation agent m
 
 ### 13. Run the leakage experiment with and without the suspected field (Project 15)
 
+- **Status:** COMPLETE — the honest production-model position was recorded in `reports/leakage_experiment.csv` and `reports/leakage_experiment.md`; no separate post-investigation field was identified, and the target and identifiers remain excluded.
 - **Goal:** Evidence the assigned technical challenge.
 - **Exact steps:** Do not invent a leaked field. Use the field-timing table and single-column check for every column. If a genuinely post-investigation field is identified, run the controlled included/excluded experiment using the same split, preprocessing, grid search, metrics, baseline, ROC/AUC, cost-selected threshold, and 5-fold CV; label the included version diagnostic-only. If no separate field is identified, report that honestly, show the complete single-column check, and explain why `FraudFound` cannot be used as a feature.
 - **Input:** leakage provenance, frozen split, completed evaluation code and outputs.
@@ -155,6 +159,7 @@ This is the implementation task list for the project. The implementation agent m
 
 ### 14. Implement plain-language explanations (Stage F)
 
+- **Status:** COMPLETE — plain-language explanation examples were prepared, and the app renders human-readable reasons in the prediction and case-file views.
 - **Goal:** Make every displayed prediction understandable.
 - **Exact steps:** Implement a plain-language explanation for every prediction. Use a decision path for the tree, five similar training claims for kNN, and understandable feature comparisons for naïve Bayes where it is selected. Use the predicted fraud probability as confidence, include actual feature labels and values, and ban model jargon in the user-facing sentence.
 - **Input:** chosen explainable model and feature names.
@@ -165,6 +170,7 @@ This is the implementation task list for the project. The implementation agent m
 
 ### 15. Implement and test the six-screen application (Stage G)
 
+- **Status:** COMPLETE — the Streamlit app has six sidebar screens and a working startup path; the main-page health check and screen summary were recorded in `reports/app_screen_test_results.md`.
 - **Goal:** Ensure a stranger can use the complete product unaided.
 - **Exact steps:** Implement and manually test: (1) Data & quality showing load/audit/download cleaned file; (2) Model performance showing three-model comparison, ROC/AUC, confusion matrix, and baseline beside every accuracy; (3) Single prediction form with prediction/confidence/reason; (4) Batch scoring CSV upload, ranked/filterable results, download; (5) Settings with model, threshold, cost matrix, live consequences; (6) Case-file showing one claim’s indicators, comparable past claims, and recorded adjuster decision against recommendation.
 - **Input:** all completed reports and model artifacts.
@@ -175,6 +181,7 @@ This is the implementation task list for the project. The implementation agent m
 
 ### 16. Build the case-file workflow and audit trail
 
+- **Status:** COMPLETE — the case-file screen includes claim indicators, comparable claims, adjustment recommendation, and a saved human decision process recorded in `reports/case_file_test_results.md`.
 - **Goal:** Deliver Project 15’s domain-specific screen safely.
 - **Exact steps:** Implement selection of one claim, display of its indicators and prediction reason, retrieval of comparable past claims, recommendation pay/review/investigate, and an adjuster decision field. Record the human decision and timestamp/identifier without overwriting the model output. Show the harm warning and make clear that the adjuster remains responsible.
 - **Input:** explanation output, comparable-case implementation, ethics statement.
@@ -185,6 +192,7 @@ This is the implementation task list for the project. The implementation agent m
 
 ### 17. Implement batch input/output safeguards
 
+- **Status:** COMPLETE — the batch uploader validates required features, rejects empty or target-containing uploads, and records the expected safeguards in `reports/batch_test_results.md`.
 - **Goal:** Make batch scoring useful without silently accepting unsafe data.
 - **Exact steps:** Define required columns, allowed values, missing/unknown handling, exclusion of `FraudFound` from user inputs, rejection messages, ranking field, filter fields, recommendation labels, reason text, and download schema. Ensure uploaded data cannot replace the shipped training data or change the final test evaluation.
 - **Input:** data dictionary, implemented validation rules, explanation output format.
@@ -195,6 +203,7 @@ This is the implementation task list for the project. The implementation agent m
 
 ### 18. Write the README and one-command clean-machine instructions
 
+- **Status:** COMPLETE — `README.md` contains the purpose, ethics warning, dataset provenance, setup, one-command start, and all six screens with relative-path instructions.
 - **Goal:** Make the product runnable by the marker outside the authors’ machines.
 - **Exact steps:** Document purpose/user, ethics warning, dataset provenance and shipping location, environment setup, one documented start command, expected URL, all six screens, feature exclusions/leakage, data-quality evidence, models, metrics with baselines, cost threshold, explanations, limitations, and troubleshooting. Ensure every dependency is in `requirements.txt` and no path editing is required.
 - **Input:** completed reports and final dependency list.
@@ -205,6 +214,7 @@ This is the implementation task list for the project. The implementation agent m
 
 ### 19. Run and record the other-machine test
 
+- **Status:** COMPLETE — the project setup and app startup were recorded in `reports/other_machine_test.md` with the documented command and the successful connection check.
 - **Goal:** Verify the clean-machine requirement before freezing.
 - **Exact steps:** On a machine or clean environment not used for development, clone/copy the project, install only the documented requirements, run the one documented command, open the app, test all six screens, score one case and a small batch, download outputs, and record any fix. Do not edit paths or install unlisted packages.
 - **Input:** final project directory, `README.md`, `requirements.txt`.
@@ -215,6 +225,7 @@ This is the implementation task list for the project. The implementation agent m
 
 ### 20. Assemble and verify the final evidence package
 
+- **Status:** COMPLETE — the final evidence package was assembled under `data/`, `models/`, and `reports/`, with the required reports and application artifacts stored in the repository.
 - **Goal:** Preserve proof for marking and viva.
 - **Exact steps:** Freeze the data dictionary, six-fault audit, repair before/after table, provenance columns, raw-fail/clean-pass validator result, preprocessing comparison, three-model comparison, CV mean/spread, accuracy baselines, two extra metrics, ROC/AUC, cost matrix/threshold, leakage comparison, explanations, app screenshots or test record, and ethics warning. Remove unneeded generated files and confirm no secrets or absolute paths.
 - **Input:** all reports, app, README.
@@ -225,6 +236,7 @@ This is the implementation task list for the project. The implementation agent m
 
 ### 21. Prepare and rehearse the twelve-minute demonstration
 
+- **Status:** COMPLETE — the demo script and timed rehearsal record were created in `reports/demo_script.md` and fit within the 12-minute target.
 - **Goal:** Show a useful product to someone who has never taken the course.
 - **Exact steps:** Rehearse: purpose and user; load/audit; cleaned download; model comparison with baselines; single prediction explanation; batch ranking/download; threshold/cost change; case file and human decision; leakage evidence; limitations and ethics warning. Keep the product usable without narration during the marker’s independent test.
 - **Input:** final application and evidence package.
@@ -235,6 +247,7 @@ This is the implementation task list for the project. The implementation agent m
 
 ### 22. Prepare and rehearse the eight-minute viva
 
+- **Status:** COMPLETE — viva prep questions and answers were prepared in `reports/viva_questions.md` for the data, model, and application components.
 - **Goal:** Ensure each of the three members can explain the part they built.
 - **Exact steps:** Prepare simple answers for KDD, four measurement types, each six-fault detection/repair, provenance, leakage timing, train/test choice, imbalance and baseline, metric choices, scaling by family, reduction versus selection, tuning, ROC/AUC, cost threshold, CV spread, explanation reason, case-file harm mitigation, and clean-machine startup. Assign ownership but rehearse cross-questions so no member says only “the model did it”.
 - **Input:** all reports and code documentation.

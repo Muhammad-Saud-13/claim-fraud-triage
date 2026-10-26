@@ -1,6 +1,7 @@
 ﻿# Runtime and data science dependencies
 streamlit
 pandas
+numpy
 scikit-learn
 matplotlib
 tabulate
