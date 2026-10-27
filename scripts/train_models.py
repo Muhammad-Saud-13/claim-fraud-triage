@@ -21,7 +21,8 @@ from sklearn.metrics import (
     roc_auc_score,
     roc_curve,
 )
-from sklearn.model_selection import GridSearchCV, StratifiedKFold, cross_validate
+from sklearn.base import clone
+from sklearn.model_selection import GridSearchCV, StratifiedKFold, cross_val_predict
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import Pipeline
@@ -189,6 +190,32 @@ def choose_cost_threshold(y_true: np.ndarray, y_prob: np.ndarray) -> pd.DataFram
     return result
 
 
+def cross_validate_at_threshold(
+    estimator: Pipeline,
+    X: pd.DataFrame,
+    y: pd.Series,
+    cv: StratifiedKFold,
+    threshold: float,
+) -> dict[str, tuple[float, float]]:
+    """Measure each fold using the already selected training-only threshold."""
+    fold_values = {"accuracy": [], "precision": [], "recall": [], "f1": [], "roc_auc": []}
+    for train_indices, validation_indices in cv.split(X, y):
+        fold_estimator = clone(estimator)
+        fold_estimator.fit(X.iloc[train_indices], y.iloc[train_indices])
+        probabilities = fold_estimator.predict_proba(X.iloc[validation_indices])[:, 1]
+        fold_metrics = compute_metrics(
+            y.iloc[validation_indices],
+            probabilities,
+            threshold=threshold,
+        )
+        for metric_name in fold_values:
+            fold_values[metric_name].append(fold_metrics[metric_name])
+    return {
+        f"{metric_name}_mean": (float(np.mean(values)), float(np.std(values)))
+        for metric_name, values in fold_values.items()
+    }
+
+
 def build_model_bundle() -> dict[str, object]:
     train, test, _, _ = load_split_data()
     X_train = train[FEATURE_COLUMNS]
@@ -201,6 +228,8 @@ def build_model_bundle() -> dict[str, object]:
     results = []
     model_objects = {}
     cost_rows_by_model = {}
+    validation_costs_by_model = {}
+    selected_thresholds = {}
 
     for model_name, spec in model_specs.items():
         search = GridSearchCV(
@@ -215,37 +244,48 @@ def build_model_bundle() -> dict[str, object]:
         best_model = search.best_estimator_
         model_objects[model_name] = best_model
 
-        cv_scores = cross_validate(
+        validation_prob = cross_val_predict(
             best_model,
             X_train,
             y_train,
             cv=cv,
-            scoring=["accuracy", "precision", "recall", "f1"],
+            method="predict_proba",
             n_jobs=-1,
+        )[:, 1]
+        validation_costs = choose_cost_threshold(y_train.to_numpy(), validation_prob)
+        selected_threshold = float(validation_costs.iloc[0]["threshold"])
+        threshold_cv = cross_validate_at_threshold(
+            best_model,
+            X_train,
+            y_train,
+            cv,
+            selected_threshold,
         )
+        validation_costs_by_model[model_name] = validation_costs
+        selected_thresholds[model_name] = selected_threshold
         y_prob = best_model.predict_proba(X_test)[:, 1]
-        metrics = compute_metrics(y_test, y_prob, threshold=0.5)
+        metrics = compute_metrics(y_test, y_prob, threshold=selected_threshold)
         sensitivity = choose_cost_threshold(y_test.to_numpy(), y_prob)
-        selected_threshold = float(sensitivity.iloc[0]["threshold"])
         cost_rows_by_model[model_name] = sensitivity
 
         results.append({
             "model": model_name,
             "best_params": json.dumps(search.best_params_, sort_keys=True),
-            "cv_accuracy_mean": float(cv_scores["test_accuracy"].mean()),
-            "cv_accuracy_std": float(cv_scores["test_accuracy"].std()),
-            "cv_precision_mean": float(cv_scores["test_precision"].mean()),
-            "cv_precision_std": float(cv_scores["test_precision"].std()),
-            "cv_recall_mean": float(cv_scores["test_recall"].mean()),
-            "cv_recall_std": float(cv_scores["test_recall"].std()),
-            "cv_f1_mean": float(cv_scores["test_f1"].mean()),
-            "cv_f1_std": float(cv_scores["test_f1"].std()),
+            "cv_accuracy_mean": threshold_cv["accuracy_mean"][0],
+            "cv_accuracy_std": threshold_cv["accuracy_mean"][1],
+            "cv_precision_mean": threshold_cv["precision_mean"][0],
+            "cv_precision_std": threshold_cv["precision_mean"][1],
+            "cv_recall_mean": threshold_cv["recall_mean"][0],
+            "cv_recall_std": threshold_cv["recall_mean"][1],
+            "cv_f1_mean": threshold_cv["f1_mean"][0],
+            "cv_f1_std": threshold_cv["f1_mean"][1],
             "test_accuracy": metrics["accuracy"],
             "test_precision": metrics["precision"],
             "test_recall": metrics["recall"],
             "test_f1": metrics["f1"],
             "test_roc_auc": metrics["roc_auc"],
             "selected_cost_threshold": selected_threshold,
+            "validation_expected_cost": float(validation_costs.iloc[0]["expected_cost"]),
             "train_majority_baseline": float(max(y_train.mean(), 1.0 - y_train.mean())),
             "test_majority_baseline": float(max(y_test.mean(), 1.0 - y_test.mean())),
         })
@@ -260,7 +300,7 @@ def build_model_bundle() -> dict[str, object]:
     comparison = comparison[[
         "model", "train_majority_baseline", "cv_accuracy_mean", "cv_accuracy_std",
         "test_majority_baseline", "test_accuracy", "test_precision", "test_recall", "test_f1", "test_roc_auc",
-        "selected_cost_threshold"
+        "selected_cost_threshold", "validation_expected_cost"
     ]]
     comparison.to_csv(MODELING_DIR / "model_comparison.csv", index=False)
 
@@ -271,7 +311,7 @@ def build_model_bundle() -> dict[str, object]:
         "",
         "## Beginner explanation",
         "",
-        "This model comparison uses the same clean feature table, the same 1994-1995 training rows, the same five-fold stratified training split, and the same untouched 1996 test rows. The majority-class baseline is shown beside every accuracy value so the fraud-class performance is not hidden by the simple majority rule.",
+        "This model comparison uses the same clean feature table, the same 1994-1995 training rows, the same five-fold stratified training split, and the same untouched 1996 test rows. Cross-validation metrics use the training-only cost-selected threshold for that model. The majority-class baseline is shown beside every accuracy value so the fraud-class performance is not hidden by the simple majority rule.",
         "",
         "| model | train baseline | cv accuracy mean ± std | test baseline | test accuracy | precision | recall | F1 | roc_auc | selected cost threshold |",
         "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
@@ -286,43 +326,25 @@ def build_model_bundle() -> dict[str, object]:
     ])
     (REPORTS_DIR / "evaluation_results.md").write_text("\n".join(summary_lines) + "\n", encoding="utf-8")
 
-    cross_validation = []
-    for model_name, spec in model_specs.items():
-        search = GridSearchCV(
-            estimator=spec["pipeline"],
-            param_grid=spec["param_grid"],
-            scoring="f1",
-            cv=cv,
-            n_jobs=-1,
-            refit=True,
-        )
-        search.fit(X_train, y_train)
-        cv_scores = cross_validate(
-            search.best_estimator_,
-            X_train,
-            y_train,
-            cv=cv,
-            scoring=["accuracy", "precision", "recall", "f1"],
-            n_jobs=-1,
-        )
-        cross_validation.append({
-            "model": model_name,
-            "accuracy_mean": float(cv_scores["test_accuracy"].mean()),
-            "accuracy_std": float(cv_scores["test_accuracy"].std()),
-            "precision_mean": float(cv_scores["test_precision"].mean()),
-            "precision_std": float(cv_scores["test_precision"].std()),
-            "recall_mean": float(cv_scores["test_recall"].mean()),
-            "recall_std": float(cv_scores["test_recall"].std()),
-            "f1_mean": float(cv_scores["test_f1"].mean()),
-            "f1_std": float(cv_scores["test_f1"].std()),
-            "majority_baseline": training_baseline,
-        })
+    cross_validation = [{
+        "model": row["model"],
+        "accuracy_mean": row["cv_accuracy_mean"],
+        "accuracy_std": row["cv_accuracy_std"],
+        "precision_mean": row["cv_precision_mean"],
+        "precision_std": row["cv_precision_std"],
+        "recall_mean": row["cv_recall_mean"],
+        "recall_std": row["cv_recall_std"],
+        "f1_mean": row["cv_f1_mean"],
+        "f1_std": row["cv_f1_std"],
+        "majority_baseline": training_baseline,
+        "threshold": row["selected_cost_threshold"],
+    } for row in results]
     pd.DataFrame(cross_validation).to_csv(REPORTS_DIR / "cross_validation_results.csv", index=False)
 
     test_rows = []
     for model_name, estimator in model_objects.items():
         y_prob = estimator.predict_proba(X_test)[:, 1]
-        metrics = compute_metrics(y_test, y_prob, threshold=0.5)
+        metrics = compute_metrics(y_test, y_prob, threshold=selected_thresholds[model_name])
         test_rows.append({
             "model": model_name,
             "majority_baseline": test_baseline,
@@ -331,25 +353,27 @@ def build_model_bundle() -> dict[str, object]:
             "recall": metrics["recall"],
             "f1": metrics["f1"],
             "roc_auc": metrics["roc_auc"],
-            "selected_cost_threshold": float(cost_rows_by_model[model_name].iloc[0]["threshold"]),
+            "selected_cost_threshold": selected_thresholds[model_name],
         })
     pd.DataFrame(test_rows).to_csv(REPORTS_DIR / "test_metrics.csv", index=False)
 
     for model_name, estimator in model_objects.items():
         y_prob = estimator.predict_proba(X_test)[:, 1]
         save_roc_plot(model_name, y_test.to_numpy(), y_prob, REPORTS_DIR / f"{model_name}_roc_curve.png")
-        save_confusion_matrix(model_name, y_test.to_numpy(), y_prob, threshold=0.5, dest=REPORTS_DIR / f"{model_name}_confusion_matrix.png")
+        save_confusion_matrix(model_name, y_test.to_numpy(), y_prob, threshold=selected_thresholds[model_name], dest=REPORTS_DIR / f"{model_name}_confusion_matrix.png")
         cost_table = choose_cost_threshold(y_test.to_numpy(), y_prob)
         cost_table.to_csv(REPORTS_DIR / f"{model_name}_cost_threshold_results.csv", index=False)
 
     best_model_name = min(
         model_objects.keys(),
-        key=lambda name: cost_rows_by_model[name].iloc[0]["expected_cost"],
+        key=lambda name: validation_costs_by_model[name].iloc[0]["expected_cost"],
     )
     selected_model = model_objects[best_model_name]
-    best_threshold = float(cost_rows_by_model[best_model_name].iloc[0]["threshold"])
+    best_threshold = selected_thresholds[best_model_name]
     y_prob_best = selected_model.predict_proba(X_test)[:, 1]
-    expected_cost = float(cost_rows_by_model[best_model_name].iloc[0]["expected_cost"])
+    expected_cost = float(cost_rows_by_model[best_model_name].loc[
+        cost_rows_by_model[best_model_name]["threshold"].eq(best_threshold), "expected_cost"
+    ].iloc[0])
     cost_matrix_lines = [
         "# Cost threshold summary",
         "",
@@ -357,7 +381,9 @@ def build_model_bundle() -> dict[str, object]:
         "",
         "A missed fraud case is assumed to cost 100,000 because it may be a hidden loss. An unnecessary investigation costs 5,000 because the claim is genuine but still uses staff time. These are compared across a set of thresholds to find the cheaper operating point.",
         "",
-        f"The chosen default operating threshold is **{best_threshold:.2f}** for the selected model **{best_model_name}**, with an expected cost of **{expected_cost:,.0f}** on the 1996 test set.",
+        f"The chosen default operating threshold is **{best_threshold:.2f}** for the selected model **{best_model_name}**. "
+        f"The threshold and model were selected using training-only out-of-fold predictions. "
+        f"Applying that frozen choice to the untouched 1996 test set gives an expected cost of **{expected_cost:,.0f}**.",
         "",
         "| threshold | precision | recall | investigations | expected cost |",
         "|---:|---:|---:|---:|---:|",
@@ -452,6 +478,7 @@ def build_model_bundle() -> dict[str, object]:
         "test": test,
         "best_model_name": best_model_name,
         "best_model": selected_model,
+        "best_threshold": best_threshold,
         "models": model_objects,
         "cost_thresholds": cost_rows_by_model,
         "report_dir": str(REPORTS_DIR),

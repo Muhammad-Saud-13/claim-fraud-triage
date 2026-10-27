@@ -9,7 +9,7 @@ This report checks the case-file screen, which combines a claim, a recommendatio
 - Policy number used for the check: a sample claim from the 1996 holdout set
 - Model view: selected model from the trained bundle
 - Recommendation: pay, review, or investigate depending on the score
-- Comparable past claims: at least one matching record or an explicit no-results message
+- Comparable past claims: five nearest training claims from the fitted kNN representation, or an explicit no-results message
 - Decision saved: yes, the adjuster decision and timestamp are written to `reports/case_decisions.csv`
 
 ## Expected result and outcome

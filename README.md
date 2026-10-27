@@ -4,7 +4,7 @@ This project is a student decision-support application for triaging insurance cl
 
 ## Project purpose
 
-The app uses the public anonymised `data/carclaims.csv` dataset. The model learns only from the claim-time information that would be available when a claim is first reviewed. It excludes the historical outcome column and identifiers from the feature set, and it keeps a clear audit trail for human review.
+The app uses the public anonymised `data/raw_claims.csv` dataset. The model learns only from the claim-time information that would be available when a claim is first reviewed. It excludes the historical outcome column and identifiers from the feature set, and it keeps a clear audit trail for human review.
 
 ## Ethics warning
 
@@ -32,7 +32,12 @@ The shipped dataset is included in the repository so the application works on a 
 
 From the project root, run:
 
-streamlit run app.py
+python -m streamlit run app.py
+
+Using `python -m streamlit` ensures that Windows uses Streamlit from the
+Python environment where the project dependencies were installed. The shorter
+`streamlit run app.py` form also works when the environment's scripts folder
+is on `PATH`.
 
 Expected browser URL:
 
@@ -97,8 +102,14 @@ Every prediction is accompanied by a plain-language reason. The case-file screen
 
 ## Troubleshooting
 
+- If PowerShell says that `streamlit` is not recognized, install the
+  dependencies and use `python -m streamlit run app.py` instead:
+
+  python -m pip install -r requirements.txt
+  python -m streamlit run app.py
 - If the browser does not open, make sure the virtual environment is active and that the package install succeeded.
-- If port 8501 is already in use, stop the active app or rerun on a free port with a command such as `streamlit run app.py --server.port 8502`.
+- If port 8501 is already in use, stop the active app or rerun on a free port
+  with a command such as `python -m streamlit run app.py --server.port 8502`.
 - If the app cannot find the dataset, run the command from the project root and keep all files in the repository.
 
 ## Files to review

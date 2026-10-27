@@ -4,7 +4,7 @@
 
 A missed fraud case is assumed to cost 100,000 because it may be a hidden loss. An unnecessary investigation costs 5,000 because the claim is genuine but still uses staff time. These are compared across a set of thresholds to find the cheaper operating point.
 
-The chosen default operating threshold is **0.95** for the selected model **gaussian_nb**, with an expected cost of **12,560,000** on the 1996 test set.
+The chosen default operating threshold is **0.95** for the selected model **gaussian_nb**. The threshold and model were selected using training-only out-of-fold predictions. Applying that frozen choice to the untouched 1996 test set gives an expected cost of **12,560,000**.
 
 | threshold | precision | recall | investigations | expected cost |
 |---:|---:|---:|---:|---:|

@@ -1,4 +1,4 @@
-# Permanent project rules
+ # Permanent project rules
 
 These rules apply to every later change in Project 15, **Insurance Claim Fraud Triage**.
 

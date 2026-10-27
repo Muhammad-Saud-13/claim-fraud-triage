@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import streamlit as st
+from sklearn.metrics import confusion_matrix, precision_score, recall_score, roc_auc_score, roc_curve
 
 ROOT = Path(__file__).resolve().parent
 DATA_DIR = ROOT / "data"
@@ -32,6 +33,7 @@ TRAIN_DF = bundle["train"]
 TEST_DF = bundle["test"]
 MODEL_MAP = bundle["models"]
 BEST_MODEL_NAME = bundle["best_model_name"]
+BEST_THRESHOLD = float(bundle.get("best_threshold", 0.60))
 
 
 def get_warning() -> str:
@@ -55,6 +57,21 @@ def get_model_probability(model_name: str, record: pd.Series) -> float:
     prepared = pd.DataFrame([record[FEATURE_COLUMNS]])
     prob = model.predict_proba(prepared)[0, 1]
     return float(prob)
+
+
+def get_similar_training_claims(record: pd.Series) -> pd.DataFrame:
+    """Return five nearest training claims using the fitted kNN representation."""
+    knn_pipeline = MODEL_MAP["knn"]
+    transformed = knn_pipeline.named_steps["preprocess"].transform(
+        pd.DataFrame([record[FEATURE_COLUMNS]])
+    )
+    distances, indices = knn_pipeline.named_steps["model"].kneighbors(
+        transformed,
+        n_neighbors=min(5, len(TRAIN_DF)),
+    )
+    similar = TRAIN_DF.iloc[indices[0]].copy()
+    similar["distance"] = distances[0]
+    return similar
 
 
 def simple_explanation(model_name: str, record: pd.Series, prob: float, review_threshold: float, investigate_threshold: float) -> str:
@@ -82,7 +99,8 @@ def simple_explanation(model_name: str, record: pd.Series, prob: float, review_t
             f"{probability_to_percent(prob)} fraud probability and recommends {recommend_from_probability(prob, review_threshold, investigate_threshold)}."
         )
     return (
-        f"The model balances a number of small signals, such as claim timing, claim amount, and the policy profile, and estimates a "
+        f"The model combines claim timing ({record.get('Days:Policy-Claim', 'unknown')}), deductible ({record.get('Deductible', 'unknown')}), "
+        f"and the policy profile ({record.get('BasePolicy', 'unknown')}) and estimates a "
         f"{probability_to_percent(prob)} fraud probability. This sits in the {recommend_from_probability(prob, review_threshold, investigate_threshold).lower()} band, so it should be treated as a decision-support signal rather than proof."
     )
 
@@ -108,12 +126,9 @@ def show_model_performance() -> None:
     test_target = test_data["FraudFound"].eq("Yes").astype(int)
     fig, ax = plt.subplots(figsize=(7, 5))
     for model_name, estimator in MODEL_MAP.items():
-        probs = estimator.predict_proba(pd.read_csv(DATA_DIR / "modeling_claims.csv"))[:, 1]
-        # keep only 1996 rows
-        x_test = pd.read_csv(DATA_DIR / "modeling_claims.csv")
-        x_test = x_test[test_data.index.to_numpy()]
+        x_all = pd.read_csv(DATA_DIR / "modeling_claims.csv")
+        x_test = x_all.iloc[test_data.index.to_numpy()]
         model_probs = estimator.predict_proba(x_test)[:, 1]
-        from sklearn.metrics import roc_curve, roc_auc_score
         fpr, tpr, _ = roc_curve(test_target.to_numpy(), model_probs)
         ax.plot(fpr, tpr, label=f"{model_name} (AUC={roc_auc_score(test_target.to_numpy(), model_probs):.3f})")
     ax.plot([0, 1], [0, 1], linestyle="--", color="gray")
@@ -122,16 +137,18 @@ def show_model_performance() -> None:
     ax.set_title("ROC curve for the three models")
     ax.legend()
     st.pyplot(fig)
+    st.caption("AUC shows how well the model ranks fraud cases above non-fraud cases across thresholds. Test-set majority baseline: 94.78%.")
 
     st.subheader("Confusion matrix")
     selected_model = st.selectbox("Choose model", list(MODEL_MAP.keys()), index=list(MODEL_MAP.keys()).index(BEST_MODEL_NAME))
-    threshold = st.slider("Investigation threshold", 0.05, 0.95, 0.5, 0.01)
+    threshold = st.slider("Investigation threshold", 0.05, 0.95, BEST_THRESHOLD, 0.01)
     y_test = TEST_DF["FraudFound"].eq("Yes").astype(int)
     y_prob = MODEL_MAP[selected_model].predict_proba(TEST_DF[FEATURE_COLUMNS])[:, 1]
     from sklearn.metrics import confusion_matrix
     pred = (y_prob >= threshold).astype(int)
     cm = confusion_matrix(y_test, pred, labels=[0, 1])
     st.dataframe(pd.DataFrame(cm, index=["Actual No", "Actual Yes"], columns=["Pred No", "Pred Yes"]))
+    st.caption("Accuracy is compared with the test-set majority baseline of 94.78%.")
 
 
 def show_single_prediction() -> None:
@@ -139,13 +156,23 @@ def show_single_prediction() -> None:
     st.warning(get_warning())
     df = pd.read_csv(DATA_DIR / "modeling_claims.csv")
     labels = pd.read_csv(DATA_DIR / "modeling_labels.csv")
-    merged = df.copy()
-    merged["PolicyNumber"] = labels["PolicyNumber"]
-    merged["Year"] = labels["Year"]
-    merged["FraudFound"] = labels["FraudFound"]
-    sample_ids = merged["PolicyNumber"].dropna().astype(str).tolist()
-    claim_id = st.selectbox("Choose a claim to review", sample_ids[:min(50, len(sample_ids))])
-    row = merged[merged["PolicyNumber"].astype(str) == str(claim_id)].iloc[0].to_dict()
+    uploaded_case = st.file_uploader("Optional: upload one claim CSV", type=["csv"], key="single_case")
+    if uploaded_case is not None:
+        uploaded = pd.read_csv(uploaded_case)
+        valid, message = validate_batch_columns(uploaded)
+        if not valid:
+            st.error(message)
+            return
+        if len(uploaded) != 1:
+            st.error("Single prediction requires exactly one claim row.")
+            return
+        claim_id = "Uploaded claim"
+        row = uploaded.iloc[0].to_dict()
+    else:
+        sample_ids = labels["PolicyNumber"].dropna().astype(str).tolist()
+        claim_id = st.selectbox("Or choose an example claim", sample_ids[:min(50, len(sample_ids))])
+        selected_index = labels.index[labels["PolicyNumber"].astype(str).eq(str(claim_id))][0]
+        row = df.iloc[selected_index].to_dict()
     selected_model = st.selectbox("Choose model for explanation", list(MODEL_MAP.keys()), index=list(MODEL_MAP.keys()).index(BEST_MODEL_NAME))
     review_threshold = st.slider("Review threshold", 0.05, 0.8, 0.20, 0.01)
     investigate_threshold = st.slider("Investigate threshold", 0.2, 0.95, 0.60, 0.01)
@@ -154,6 +181,8 @@ def show_single_prediction() -> None:
     st.metric("Predicted fraud probability", probability_to_percent(prob))
     st.metric("Recommendation", recommendation)
     st.markdown(simple_explanation(selected_model, pd.Series(row), prob, review_threshold, investigate_threshold))
+    if selected_model == "knn":
+        st.caption("Comparable claims are shown on the Case-file screen using the training claims only.")
     st.subheader("Claim indicators")
     display_row = {key: value for key, value in row.items() if key in FEATURE_COLUMNS}
     st.dataframe(pd.DataFrame([display_row]).T.rename({0: "value"}), use_container_width=True)
@@ -174,6 +203,10 @@ def show_data_quality() -> None:
             st.write(f"{label.title()}: {result['passed_count']} checks passed, {result['failed_count']} failed.")
     else:
         st.info("Validation results file not yet generated.")
+    audit_path = REPORTS_DIR / "data_quality" / "raw_quality_audit_lecture2.md"
+    if audit_path.exists():
+        with st.expander("Read the Lecture 2 audit report"):
+            st.markdown(audit_path.read_text(encoding="utf-8"))
     st.download_button("Download cleaned CSV", data=cleaned.to_csv(index=False).encode("utf-8"), file_name="cleaned_claims.csv", mime="text/csv")
 
 
@@ -212,7 +245,15 @@ def show_batch_scoring() -> None:
     scored["recommendation"] = scored["fraud_probability"].apply(lambda p: recommend_from_probability(float(p), review_threshold, investigate_threshold))
     scored["reason"] = scored["fraud_probability"].apply(lambda p: f"Probability {probability_to_percent(float(p))}; risk band {recommend_from_probability(float(p), review_threshold, investigate_threshold)}.")
     scored = scored.sort_values("fraud_probability", ascending=False)
-    st.dataframe(scored[["fraud_probability", "recommendation", "reason"]], use_container_width=True)
+    minimum_probability, maximum_probability = st.slider(
+        "Filter fraud probability",
+        0.0,
+        1.0,
+        (0.0, 1.0),
+        0.01,
+    )
+    scored = scored[scored["fraud_probability"].between(minimum_probability, maximum_probability)]
+    st.dataframe(scored.reset_index(drop=True), use_container_width=True)
     csv_download = scored.to_csv(index=False).encode("utf-8")
     st.download_button("Download batch results", data=csv_download, file_name="fraud_batch_results.csv", mime="text/csv")
 
@@ -222,7 +263,7 @@ def show_settings() -> None:
     st.warning(get_warning())
     selected_model = st.selectbox("Selected model", list(MODEL_MAP.keys()), index=list(MODEL_MAP.keys()).index(BEST_MODEL_NAME))
     review_threshold = st.slider("Pay / Review cut-off", 0.05, 0.8, 0.20, 0.01)
-    investigate_threshold = st.slider("Review / Investigate cut-off", 0.2, 0.95, 0.60, 0.01)
+    investigate_threshold = st.slider("Review / Investigate cut-off", 0.2, 0.95, BEST_THRESHOLD, 0.01)
     missed_cost = st.number_input("Missed fraud cost", min_value=1000.0, value=100000.0, step=1000.0)
     unnecessary_cost = st.number_input("Unnecessary investigation cost", min_value=100.0, value=5000.0, step=100.0)
 
@@ -262,10 +303,7 @@ def show_case_file() -> None:
     investigate_threshold = st.slider("Investigate threshold", 0.2, 0.95, 0.60, 0.01, key="case_investigate")
     prob = get_model_probability(selected_model, row)
     recommendation = recommend_from_probability(prob, review_threshold, investigate_threshold)
-    compare = merged.dropna(subset=["PolicyNumber"]).copy()
-    compare = compare[compare["PolicyNumber"].astype(str) != str(policy_number)]
-    diff = compare.apply(lambda r: sum(1 for f in FEATURE_COLUMNS if str(r[f]).lower() == str(row[f]).lower()), axis=1)
-    comparable = compare.assign(match_score=diff).sort_values("match_score", ascending=False).head(5)
+    comparable = get_similar_training_claims(row)
     st.subheader("Policy indicators")
     st.dataframe(pd.DataFrame([row[FEATURE_COLUMNS].to_dict()]).T.rename({0: "value"}), use_container_width=True)
     st.subheader("Recommendation")
@@ -275,7 +313,7 @@ def show_case_file() -> None:
     if comparable.empty:
         st.write("No comparable past claims were found for this case.")
     else:
-        st.dataframe(comparable[["PolicyNumber"] + FEATURE_COLUMNS[:5]].head(5), use_container_width=True)
+        st.dataframe(comparable[["PolicyNumber"] + FEATURE_COLUMNS[:5] + ["distance"]], use_container_width=True)
     with st.form("case_decision_form"):
         decision = st.radio("Adjuster decision", ["Pay", "Review", "Investigate", "No action taken"], index=1)
         notes = st.text_area("Notes")
