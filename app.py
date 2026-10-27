@@ -173,9 +173,13 @@ def show_single_prediction() -> None:
         claim_id = st.selectbox("Or choose an example claim", sample_ids[:min(50, len(sample_ids))])
         selected_index = labels.index[labels["PolicyNumber"].astype(str).eq(str(claim_id))][0]
         row = df.iloc[selected_index].to_dict()
-    selected_model = st.selectbox("Choose model for explanation", list(MODEL_MAP.keys()), index=list(MODEL_MAP.keys()).index(BEST_MODEL_NAME))
+    selected_model = st.selectbox("Choose model for prediction", list(MODEL_MAP.keys()), index=list(MODEL_MAP.keys()).index(BEST_MODEL_NAME))
     review_threshold = st.slider("Review threshold", 0.05, 0.8, 0.20, 0.01)
     investigate_threshold = st.slider("Investigate threshold", 0.2, 0.95, 0.60, 0.01)
+    predict = st.button("Predict claim", type="primary")
+    if not predict:
+        st.info("Choose a claim and model, then select Predict claim to run the model.")
+        return
     prob = get_model_probability(selected_model, pd.Series(row))
     recommendation = recommend_from_probability(prob, review_threshold, investigate_threshold)
     st.metric("Predicted fraud probability", probability_to_percent(prob))
@@ -238,6 +242,10 @@ def show_batch_scoring() -> None:
     model_name = st.selectbox("Select scoring model", list(MODEL_MAP.keys()), index=list(MODEL_MAP.keys()).index(BEST_MODEL_NAME))
     review_threshold = st.slider("Review threshold", 0.05, 0.8, 0.20, 0.01, key="batch_review")
     investigate_threshold = st.slider("Investigate threshold", 0.2, 0.95, 0.60, 0.01, key="batch_investigate")
+    score_batch = st.button("Score batch", type="primary")
+    if not score_batch:
+        st.info("Choose the model and thresholds, then select Score batch to run the model.")
+        return
     scored = batch.copy()
     scored = scored[FEATURE_COLUMNS].copy()
     probs = MODEL_MAP[model_name].predict_proba(scored)[0:len(scored)]
@@ -301,6 +309,10 @@ def show_case_file() -> None:
     selected_model = st.selectbox("Model for this case", list(MODEL_MAP.keys()), index=list(MODEL_MAP.keys()).index(BEST_MODEL_NAME), key="case_model")
     review_threshold = st.slider("Review threshold", 0.05, 0.8, 0.20, 0.01, key="case_review")
     investigate_threshold = st.slider("Investigate threshold", 0.2, 0.95, 0.60, 0.01, key="case_investigate")
+    generate_recommendation = st.button("Generate recommendation", type="primary")
+    if not generate_recommendation:
+        st.info("Choose the model and thresholds, then select Generate recommendation.")
+        return
     prob = get_model_probability(selected_model, row)
     recommendation = recommend_from_probability(prob, review_threshold, investigate_threshold)
     comparable = get_similar_training_claims(row)
